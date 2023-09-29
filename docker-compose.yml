@@ -1,0 +1,48 @@
+version: '3.9'
+
+services:
+  app:
+    networks:
+      - mynetwork
+    ports:
+      - '8080:8080'
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      args:
+        UID: ${UID:-1007}
+        GUID: ${GUID:-1007}
+    volumes:
+      - "./app:/app"
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    networks:
+      - mynetwork
+    restart: always
+    image: postgres
+
+    user: postgres
+    environment:
+      POSTGRES_PASSWORD: cz_api
+      POSTGRES_USER: postgres
+      POSTGRES_DB: cyber_zone_api
+      PG_DATA: /var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:54321:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -q
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pg-data:
+
+networks:
+  mynetwork:
